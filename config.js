@@ -1,0 +1,2 @@
+/* ตั้งค่าเพียงบรรทัดเดียว: วางลิงก์ Web App (ที่ลงท้าย /exec) จาก Apps Script */
+window.API_URL = 'https://script.google.com/macros/s/https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTjUIarOEuRhfY5uj77Wt9RTsYi6VaeammEqtXcfCu8MWKUF1mVPbNhewlxK6ZgnZGe3tt6iMkgpb9tMA5Dw2pvp0NuVbrSHH5Ea6ARBeown-CDF_9NCsWbWisK3-n0jgJ5bQg2gv4x5RGJhEHy9HG2SB-ccFGbA8DLlr-tlGsLs890CtO5Q95sWuT9-e0Qgr5fZOMy6MdUMvfxS3dvHvJWvDAyX2sjMSg3tyn7MCk5Y81SYE4VVXYUvAsUlOJkjbLoDdzB-AB4M2JH50j52fypF8Y5gQ&lib=Mzx27kSsk0JhUkXDH6Cwl8LSiJifoxzNZ/exec';

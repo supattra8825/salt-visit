@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ระบบเยี่ยมบ้านผู้ป่วยวันนี้คุณกินเค็มอ่ะป่าว</title>
+<meta name="theme-color" content="#0b2a6b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="กินเค็มอ่ะป่าว">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+
+<section id="login"><div class="lw">
+  <div class="ll">
+    <div class="brand"><i>🧂</i><span>วันนี้คุณกินเค็มอ่ะป่าว</span></div>
+    <div><h1>เยี่ยมบ้าน ตรวจความเค็ม ดูแลไต หัวใจ และความดัน</h1>
+    <p>บันทึกการเยี่ยมบ้าน วัดค่าความเค็มของอาหาร และติดตามผู้ป่วยโรคเรื้อรังในชุมชน สำหรับเจ้าหน้าที่ รพ.สต.</p></div>
+    <div class="lf">รพ.สต.บ้านบัวหลวง ตำบลเหล่า อำเภอทุ่งเขาหลวง จังหวัดร้อยเอ็ด<br>พัฒนาโดย นางสุพัตรา ทองสุทธิ์ พยาบาลวิชาชีพ</div>
+  </div>
+  <div class="lr">
+    <button class="tgl sec sm" type="button" data-a="theme" title="สลับโหมดมืด/สว่าง">🌙</button>
+    <h2>เข้าสู่ระบบ</h2><p class="sub">กรอกชื่อผู้ใช้และรหัสผ่านเพื่อเริ่มงาน</p>
+    <label class="t" for="u">ชื่อผู้ใช้</label>
+    <input id="u" placeholder="ชื่อผู้ใช้" autocomplete="username">
+    <label class="t" for="p">รหัสผ่าน</label>
+    <div class="pwr"><input id="p" type="password" placeholder="รหัสผ่าน" autocomplete="current-password"><button class="sec sm" type="button" data-a="pw" title="แสดง/ซ่อนรหัสผ่าน">👁</button></div>
+    <button id="lb" type="button" data-a="login" style="width:100%;margin-top:16px">เข้าสู่ระบบ</button>
+    <p id="err" class="msg"></p>
+    <div class="lk"><a data-a="forgot">ลืมรหัสผ่าน / ขอบัญชีใหม่</a><a data-a="test">ตรวจสอบการเชื่อมต่อ</a></div>
+    <p style="margin-top:10px;text-align:center"><a id="inst" data-a="install" class="hide">📲 ติดตั้งเป็นแอปบนเครื่องนี้</a></p>
+  </div>
+</div></section>
+
+<div id="app" class="hide">
+  <nav id="nav">
+    <div class="nb"><i>🧂</i><b>กินเค็มอ่ะป่าว</b></div>
+    <a data-a="go" data-v="dash"><i>📊</i><span>ภาพรวม</span></a>
+    <a data-a="go" data-v="pts"><i>👥</i><span>ผู้ป่วย</span></a>
+    <a data-a="go" data-v="vis"><i>🏠</i><span>เยี่ยมบ้าน</span></a>
+    <a data-a="go" data-v="prt"><i>🖨️</i><span>พิมพ์</span></a>
+    <a data-a="go" data-v="set"><i>⚙️</i><span>ตั้งค่า</span></a>
+    <a data-a="full" id="fs"><i>⛶</i><span>เต็มจอ</span></a>
+    <div class="me" id="me"></div>
+  </nav>
+  <main><div id="view"></div></main>
+</div>
+<div id="modal" class="hide"></div>
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body></html>
