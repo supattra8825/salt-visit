@@ -118,3 +118,8 @@ main{flex:1;margin-left:224px;padding:26px;min-width:0;width:100%}
  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
  @page{size:A4;margin:14mm}
 }
+/* คัดกรองเบาหวาน/ความดัน */
+.pl{display:inline-block;padding:6px 13px;border-radius:99px;border:1px solid var(--ln);margin:3px 6px 3px 0;cursor:pointer;color:var(--tx);font-weight:600;font-size:14px;background:var(--in)}
+.pl.on{background:var(--p2);color:#fff;border-color:var(--p2)}
+.scs .ch span{margin:3px 6px 3px 0}
+@media(max-width:820px){#fs{display:none!important}}

@@ -48,7 +48,7 @@ function call(action, p) {
 }
 async function load() {
   var d = await call('list');
-  S.patients = d.patients; S.visits = d.visits; S.last = {};
+  S.patients = d.patients; S.visits = d.visits; S.screens = d.screenings || []; S.last = {};
   S.visits.forEach(function (v) { if (!S.last[v.patientId] || v.date > S.last[v.patientId].date) S.last[v.patientId] = v; });
 }
 /* ---------- login ---------- */
@@ -84,7 +84,7 @@ function go(tab) {
 }
 function render() {
   var v = $('view');
-  v.innerHTML = '<div class="fade">' + ({ dash: vDash, pts: vPts, vis: vVis, prt: vPrt, set: vSet }[S.tab])() + '</div>';
+  v.innerHTML = '<div class="fade">' + ({ dash: vDash, pts: vPts, vis: vVis, scr: function () { return vScr(); }, prt: vPrt, set: vSet }[S.tab])() + '</div>';
   setTimeout(function () {
     document.querySelectorAll('.seg').forEach(function (e) { e.style.strokeDasharray = e.dataset.d; });
     document.querySelectorAll('[data-h]').forEach(function (e) { e.style.height = e.dataset.h + '%'; });
@@ -200,7 +200,7 @@ function viewP(id) {
     '<b>กินเค็ม</b><span>เข้าข่าย ' + qy + ' จาก ' + QS.length + ' ข้อ</span><b>PDPA</b><span>' + (p.pdpa === 'Y' ? 'ยินยอมเมื่อ ' + fmtD(p.pdpaDate) : 'ยังไม่ยินยอม') + '</span></div>' +
     (map ? '<p style="margin-top:10px"><a href="' + map + '" target="_blank" rel="noopener">🗺️ เปิดแผนที่นำทาง</a></p>' : '') + sp +
     '<label class="t">ประวัติการเยี่ยม (' + vs.length + ')</label>' + (vs.map(function (v) { return rowV(v, false); }).join('') || '<div class="empty">ยังไม่มีการเยี่ยม</div>') +
-    '<div class="row">' + (S.role === 'admin' ? '<button class="dg sm" data-a="delP" data-v="' + id + '">ลบ</button>' : '') + '<button class="sec" data-a="prtP" data-v="' + id + '">🖨️ พิมพ์</button><button class="sec" data-a="editP" data-v="' + id + '">แก้ไข</button><button data-a="addV" data-v="' + id + '">+ บันทึกการเยี่ยม</button></div>');
+    (window.scMini ? scMini(id) : '') + '<div class="row">' + (S.role === 'admin' ? '<button class="dg sm" data-a="delP" data-v="' + id + '">ลบ</button>' : '') + '<button class="sec" data-a="prtP" data-v="' + id + '">🖨️ พิมพ์</button><button class="sec" data-a="editP" data-v="' + id + '">แก้ไข</button><button class="sec" data-a="scN" data-v="' + id + '">🩺 คัดกรอง</button><button data-a="addV" data-v="' + id + '">+ บันทึกการเยี่ยม</button></div>');
 }
 /* ---------- visits ---------- */
 function rowV(v, name) {
@@ -384,7 +384,7 @@ var A = {
   },
   addP: function () { pForm(''); }, editP: function (id) { pForm(id); }, saveP: function (id) { saveP(id); },
   viewP: function (id) { viewP(id); },
-  delP: function (id) { ask('ลบผู้ป่วยรายนี้และประวัติการเยี่ยมทั้งหมด? ย้อนกลับไม่ได้', function () { del('deletePatient', id, 'ลบผู้ป่วยแล้ว'); }); },
+  delP: function (id) { ask('ลบผู้ป่วยรายนี้ ประวัติการเยี่ยม และผลคัดกรองทั้งหมด? ย้อนกลับไม่ได้', function () { del('deletePatient', id, 'ลบผู้ป่วยแล้ว'); }); },
   addV: function (id) { vForm(id || '', ''); }, editV: function (id) { vForm('', id); }, saveV: saveV,
   delV: function (id) { ask('ลบบันทึกการเยี่ยมนี้?', function () { del('deleteVisit', id, 'ลบบันทึกแล้ว'); }); },
   gps: function () {
