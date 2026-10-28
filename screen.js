@@ -13,8 +13,7 @@ var TXQ = [['1', 'รับการรักษาอยู่/ปฏิบั�
 var EXQ = ['ออกกำลังกายทุกวัน ครั้งละ 30 นาที', 'ออกกำลังกายสัปดาห์ละมากกว่า 3 ครั้ง ครั้งละ 30 นาที สม่ำเสมอ', 'ออกกำลังกายสัปดาห์ละ 3 ครั้ง ครั้งละ 30 นาที สม่ำเสมอ', 'ออกกำลังกายน้อยกว่าสัปดาห์ละ 3 ครั้ง', 'ไม่ออกกำลังกายเลย'];
 var ALQ = [['no', 'ไม่ดื่ม'], ['oc', 'ดื่มบางโอกาส'], ['rg', 'ดื่มเป็นประจำ'], ['qt', 'เคยดื่มแต่เลิกแล้ว']];
 var FDQ = [['sweet', 'หวาน'], ['salt', 'เค็ม'], ['fat', 'มัน'], ['none', 'ไม่ชอบทุกข้อ']];
-var SCT = [['fm', '👪 ครอบครัว'], ['hx', '🩺 ประวัติป่วย'], ['sm', '🚬 บุหรี่'], ['al', '🍺 แอลกอฮอล์'], ['ex', '🏃 ออกกำลังกาย'], ['fd', '🍽️ อาหาร'], ['su', '🩸 น้ำตาล'], ['bp', '❤️ ความดัน']];
-var scEdit = null, scTab = 'fm';
+var scEdit = null;
 
 function nz(v) { v = parseFloat(v); return isNaN(v) ? null : v; }
 function nowT() { var d = new Date(), z = function (n) { return ('0' + n).slice(-2); }; return z(d.getHours()) + ':' + z(d.getMinutes()); }
@@ -74,60 +73,89 @@ function scSum(ev) {
 }
 
 /* ---------- ส่วนประกอบฟอร์ม ---------- */
+var scStep = 1, scPid = '', SCN = 5;
+var STEPS = [['👤', 'ข้อมูลทั่วไป'], ['👪', 'ประวัติสุขภาพ'], ['🚬', 'พฤติกรรม'], ['🩸', 'ผลตรวจ'], ['✅', 'สรุปและบันทึก']];
 function hd(t) { return '<label class="t" style="font-size:15px;color:var(--tx)">' + t + '</label>'; }
 function chk(n, v, l, on) { return '<label class="ch"><input type="checkbox" name="' + n + '" value="' + v + '"' + (on ? ' checked' : '') + '><span>' + l + '</span></label>'; }
 function rad(n, v, l, on) { return '<label class="ch"><input type="radio" name="' + n + '" value="' + v + '"' + (on ? ' checked' : '') + '><span>' + l + '</span></label>'; }
-function qrow(l, chips) { return '<div class="qr" style="flex-wrap:wrap;justify-content:space-between;border-bottom:1px solid var(--ln)"><span style="flex:1;min-width:210px">' + l + '</span><span>' + chips + '</span></div>'; }
-function scInt(iv) {
-  var sm = iv.sm, al = iv.al;
+function qa(l, chips) { return '<div class="qa"><span class="qt">' + l + '</span><span class="qo">' + chips + '</span></div>'; }
+function card(t, h, extra) { return '<div class="cd scc"><div class="sct">' + t + '</div>' + (extra || '') + h + '</div>'; }
+
+function scP2(iv) {
   var fam = function (n, a) { return FAM.map(function (x) { return chk(n, x[0], x[1], a.indexOf(x[0]) >= 0); }).join(''); };
-  var s = '<div class="scs" id="scs_fm">' + hd('บิดาหรือมารดาของท่านมีประวัติเจ็บป่วยด้วย') + fam('fm', iv.fm) + fld('sc_fmo', 'อื่นๆ', iv.fmo) +
-    '<div style="height:10px"></div>' + hd('พี่น้อง (สายตรง) ของท่านมีประวัติเจ็บป่วยด้วย') + fam('sb', iv.sb) + fld('sc_sbo', 'อื่นๆ', iv.sbo) + '</div>';
-  s += '<div class="scs hide" id="scs_hx">' + hd('ท่านมีประวัติเจ็บป่วย หรือต้องพบแพทย์ด้วยโรคหรืออาการ') +
-    HX3.map(function (x) { var v = iv.hx[x[0]], n = 'hx_' + x[0]; return qrow(x[1], rad(n, 'Y', 'มี', v === 'Y') + rad(n, 'N', 'ไม่มี', v === 'N') + rad(n, 'U', 'ไม่เคยตรวจ', v === 'U')); }).join('') +
-    HX2.map(function (x) { var v = iv.sy[x[0]], n = 'sy_' + x[0]; return qrow(x[1], rad(n, 'Y', 'มี', v === 'Y') + rad(n, 'N', 'ไม่มี', v === 'N')); }).join('') +
-    '<div style="height:10px"></div>' + hd('วิธีการปฏิบัติตนหากมีประวัติด้านบน') + TXQ.map(function (x) { return rad('tx', x[0], x[1], iv.tx === x[0]); }).join('') +
-    '<div class="row" style="justify-content:flex-start"><button type="button" class="sec sm" data-a="scRst">↺ ล้างคำตอบหน้านี้</button></div></div>';
-  s += '<div class="scs hide" id="scs_sm">' + hd('ท่านสูบบุหรี่หรือไม่') + rad('sms', 'no', 'ไม่สูบ', sm.st === 'no') + rad('sms', 'yes', 'สูบ', sm.st === 'yes') +
-    '<div class="g2">' + fld('sc_smc', 'จำนวน (มวน/วัน)', sm.cig, 'number', 'min="0" inputmode="numeric"') + fld('sc_smy', 'ระยะเวลา (ปี) ตั้งแต่เริ่มสูบจนถึงปัจจุบัน', sm.yr, 'number', 'min="0"') + '</div>' +
-    '<div class="g2">' + fld('sc_smp', 'จำนวน (Pack/ปี)', sm.pk, 'number', 'step="0.1" min="0"') + fld('sc_smt', 'ชนิดของบุหรี่', sm.ty) + '</div>' +
-    '<label class="qr" style="margin-top:10px"><input type="checkbox" id="sc_smq"' + (sm.qt === 'Y' ? ' checked' : '') + '>เคยสูบแต่เลิกแล้ว</label>' +
-    '<div class="g2">' + fld('sc_smqt', 'ชนิดของบุหรี่ที่เคยสูบ', sm.qty) + fld('sc_smqy', 'ระยะเวลา (ปี) ตั้งแต่เริ่มสูบจนหยุดสูบ', sm.qyr, 'number', 'min="0"') + '</div></div>';
-  s += '<div class="scs hide" id="scs_al">' + hd('ท่านดื่มแอลกอฮอล์หรือไม่') + ALQ.map(function (x) { return rad('als', x[0], x[1], al.st === x[0]); }).join('') +
-    '<div class="g2">' + fld('sc_alf', 'ความถี่ (ครั้ง/สัปดาห์)', al.fq, 'number', 'min="0" max="7"') + fld('sc_alt', 'ชนิดเครื่องดื่ม', al.ty) + '</div>' + fld('sc_aly', 'ระยะเวลาที่ดื่ม (ปี)', al.yr, 'number', 'min="0"') + '</div>';
-  s += '<div class="scs hide" id="scs_ex">' + hd('การออกกำลังกาย') + EXQ.map(function (t, i) { return '<div>' + rad('ex', String(i + 1), t, iv.ex === String(i + 1)) + '</div>'; }).join('') + '</div>';
-  s += '<div class="scs hide" id="scs_fd">' + hd('ท่านชอบอาหารรสใด') + FDQ.map(function (x) { return chk('fd', x[0], x[1], iv.fd.indexOf(x[0]) >= 0); }).join('') + '</div>';
-  return s;
+  var tools = '<div class="ph2" style="margin:0 0 6px"><button type="button" class="sec sm" data-a="scAllN">✔ ตอบ "ไม่มี" ข้อที่ยังไม่ได้ตอบ</button><button type="button" class="sec sm" data-a="scRst">↺ ล้างคำตอบ</button></div>';
+  return card('👪 ประวัติครอบครัว', hd('บิดาหรือมารดามีประวัติเจ็บป่วยด้วย') + fam('fm', iv.fm) + fld('sc_fmo', 'อื่นๆ', iv.fmo) +
+      '<div style="height:12px"></div>' + hd('พี่น้อง (สายตรง) มีประวัติเจ็บป่วยด้วย') + fam('sb', iv.sb) + fld('sc_sbo', 'อื่นๆ', iv.sbo)) +
+    card('🩺 ประวัติการเจ็บป่วยของผู้ป่วย', HX3.map(function (x) {
+      var v = iv.hx[x[0]], n = 'hx_' + x[0]; return qa(x[1], rad(n, 'Y', 'มี', v === 'Y') + rad(n, 'N', 'ไม่มี', v === 'N') + rad(n, 'U', 'ไม่เคยตรวจ', v === 'U'));
+    }).join(''), '<p class="sub" style="margin-bottom:6px">ท่านมีประวัติเจ็บป่วย หรือต้องพบแพทย์ด้วยโรคหรืออาการต่อไปนี้หรือไม่</p>' + tools) +
+    card('🔎 อาการที่พบ', HX2.map(function (x) {
+      var v = iv.sy[x[0]], n = 'sy_' + x[0]; return qa(x[1], rad(n, 'Y', 'มี', v === 'Y') + rad(n, 'N', 'ไม่มี', v === 'N'));
+    }).join('')) +
+    card('💊 การปฏิบัติตนหากมีประวัติเจ็บป่วย', TXQ.map(function (x) { return '<div>' + rad('tx', x[0], x[1], iv.tx === x[0]) + '</div>'; }).join(''));
+}
+function scP3(iv) {
+  var sm = iv.sm, al = iv.al;
+  return card('🚬 การสูบบุหรี่', rad('sms', 'no', 'ไม่สูบ', sm.st === 'no') + rad('sms', 'yes', 'สูบ', sm.st === 'yes') +
+      '<div class="g2">' + fld('sc_smc', 'จำนวน (มวน/วัน)', sm.cig, 'number', 'min="0" inputmode="numeric"') + fld('sc_smy', 'ระยะเวลาที่สูบ (ปี) จนถึงปัจจุบัน', sm.yr, 'number', 'min="0"') + '</div>' +
+      '<div class="g2">' + fld('sc_smp', 'จำนวน (Pack/ปี) คำนวณให้อัตโนมัติ', sm.pk, 'number', 'step="0.1" min="0"') + fld('sc_smt', 'ชนิดของบุหรี่', sm.ty) + '</div>' +
+      '<label class="qr" style="margin-top:12px"><input type="checkbox" id="sc_smq"' + (sm.qt === 'Y' ? ' checked' : '') + '>เคยสูบแต่เลิกแล้ว</label>' +
+      '<div class="g2">' + fld('sc_smqt', 'ชนิดของบุหรี่ที่เคยสูบ', sm.qty) + fld('sc_smqy', 'ระยะเวลาที่สูบ (ปี) จนหยุดสูบ', sm.qyr, 'number', 'min="0"') + '</div>') +
+    card('🍺 การดื่มแอลกอฮอล์', ALQ.map(function (x) { return rad('als', x[0], x[1], al.st === x[0]); }).join('') +
+      '<div class="g2">' + fld('sc_alf', 'ความถี่ (ครั้ง/สัปดาห์)', al.fq, 'number', 'min="0" max="7"') + fld('sc_alt', 'ชนิดเครื่องดื่ม', al.ty) + '</div>' + fld('sc_aly', 'ระยะเวลาที่ดื่ม (ปี)', al.yr, 'number', 'min="0"')) +
+    card('🏃 การออกกำลังกาย', EXQ.map(function (t, i) { return '<div>' + rad('ex', String(i + 1), t, iv.ex === String(i + 1)) + '</div>'; }).join('')) +
+    card('🍽️ การรับประทานอาหาร', hd('ท่านชอบอาหารรสใด (เลือกได้หลายข้อ)') + FDQ.map(function (x) { return chk('fd', x[0], x[1], iv.fd.indexOf(x[0]) >= 0); }).join(''));
 }
 
+/* ---------- หน้าคัดกรองแบบเต็มหน้าจอ ---------- */
 function scForm(pid, sid) {
   if (!S.patients.length) { toast('กรุณาเพิ่มผู้ป่วยก่อนคัดกรอง', 1); return; }
-  var s = S.screens.filter(function (x) { return x.id === sid; })[0] || {}; scEdit = s.id ? s : null; scTab = 'fm';
-  var sel = pid || s.patientId || '', iv = parseIv(s.interview);
-  var ops = '<option value="">- เลือกผู้ป่วย -</option>' + S.patients.map(function (p) { return '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('');
-  var nm = 'step="0.1" min="0" inputmode="decimal"';
-  var pills = SCT.map(function (t) { return '<a class="pl' + (t[0] === 'fm' ? ' on' : '') + '" data-a="scT" data-v="' + t[0] + '">' + t[1] + '</a>'; }).join('');
-  openModal('<div id="scf"><h3>' + (s.id ? 'แก้ไขผลคัดกรอง' : 'คัดกรองความเสี่ยงเบาหวานและความดัน') + '</h3>' +
-    '<label class="t" for="sc_p">ผู้ป่วย *</label><select id="sc_p">' + ops + '</select>' +
-    '<div class="g2">' + fld('sc_d', 'วันที่ *', s.date || today(), 'date') + fld('sc_t', 'เวลา', s.time || nowT(), 'time') + '</div>' +
-    '<div class="g2">' + fld('sc_w', 'น้ำหนัก (กก.)', s.weight, 'number', nm) + fld('sc_h', 'ส่วนสูง (ซม.)', s.height, 'number', nm) + '</div>' +
-    '<div class="g2">' + fld('sc_o', 'รอบเอว (ซม.)', s.waist, 'number', nm) + fld('sc_b', 'BMI (คำนวณอัตโนมัติ)', s.bmi, 'text', 'readonly') + '</div>' +
-    '<div class="cd" id="sc_sum" style="margin-top:14px;padding:12px"></div>' +
-    '<p class="sub" style="margin:6px 0 10px;text-align:center">ผลคัดกรองเบื้องต้น ไม่ใช่การวินิจฉัย ผู้ที่ค่าผิดปกติควรได้รับการยืนยันโดยแพทย์</p>' +
-    '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px"><b>การสัมภาษณ์และการวัดค่า</b><button type="button" class="sec sm" data-a="scCp">📋 ลอกผลสัมภาษณ์จากครั้งก่อน</button></div>' +
-    '<div style="margin:8px 0">' + pills + '</div>' +
-    '<div id="sc_int">' + scInt(iv) + '</div>' +
-    '<div class="scs hide" id="scs_su">' + hd('ระดับน้ำตาลในเลือด') + '<label class="t" for="sc_gt">ประเภทการตรวจ</label><select id="sc_gt"><option value="FBS"' + (s.sugarType !== 'RBS' ? ' selected' : '') + '>งดอาหารอย่างน้อย 8 ชั่วโมง (FPG)</option><option value="RBS"' + (s.sugarType === 'RBS' ? ' selected' : '') + '>ไม่ได้งดอาหาร (สุ่มตรวจ)</option></select>' +
-    fld('sc_g', 'ค่าน้ำตาลในเลือด (mg/dL)', s.sugar, 'number', 'min="0" inputmode="decimal"') +
-    '<p class="sub" style="margin-top:8px">งดอาหาร: ปกติ &lt; 100 · เสี่ยง 100–125 · สูง ≥ 126<br>ไม่งดอาหาร: ปกติ &lt; 140 · เฝ้าระวัง 140–199 · สูง ≥ 200</p></div>' +
-    '<div class="scs hide" id="scs_bp">' + hd('การวัดความดันโลหิต (mmHg)') + '<div class="g2">' + fld('sc_s1', 'ครั้งที่ 1 ตัวบน (SYS)', s.sbp1, 'number', 'min="0" inputmode="numeric"') + fld('sc_d1', 'ครั้งที่ 1 ตัวล่าง (DIA)', s.dbp1, 'number', 'min="0" inputmode="numeric"') +
-    fld('sc_s2', 'ครั้งที่ 2 ตัวบน (ถ้ามี)', s.sbp2, 'number', 'min="0" inputmode="numeric"') + fld('sc_d2', 'ครั้งที่ 2 ตัวล่าง (ถ้ามี)', s.dbp2, 'number', 'min="0" inputmode="numeric"') + '</div>' +
-    fld('sc_hr', 'ชีพจร (ครั้ง/นาที)', s.pulse, 'number', 'min="0" inputmode="numeric"') +
-    '<p class="sub" style="margin-top:8px">ปกติ &lt; 120/80 · เฝ้าระวัง 120–139 / 80–89 · สูง ≥ 140/90 (ใช้ค่าเฉลี่ยของครั้งที่วัด)</p></div>' +
-    '<label class="t" for="sc_n">บันทึก/คำแนะนำที่ให้</label><textarea id="sc_n">' + esc(s.note) + '</textarea>' +
-    '<div class="row">' + (s.id ? '<button class="dg" data-a="scD" data-v="' + s.id + '">ลบ</button><button class="sec" data-a="scP" data-v="' + s.id + '">🖨️ พิมพ์</button>' : '') + '<button class="sec" data-a="close">ยกเลิก</button><button id="sv" data-a="scS">บันทึกผลคัดกรอง</button></div></div>');
-  scUp();
+  scEdit = S.screens.filter(function (x) { return x.id === sid; })[0] || null; scPid = pid || ''; scStep = 1;
+  closeModal(); go('scf');
+  var a = document.querySelector('#nav a[data-v=scr]'); if (a) a.classList.add('on');
+  scShow(1); scUp();
 }
+function vScf() {
+  var s = scEdit || {}, iv = parseIv(s.interview), sel = s.patientId || scPid || '', nm = 'step="0.1" min="0" inputmode="decimal"', num = 'min="0" inputmode="numeric"';
+  var ops = '<option value="">- เลือกผู้ป่วย -</option>' + S.patients.map(function (p) { return '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('');
+  var stp = STEPS.map(function (t, i) { return '<a class="sp" data-a="scG" data-v="' + (i + 1) + '"><b>' + (i + 1) + '</b><span>' + t[1] + '</span></a>'; }).join('');
+  var part = function (n, h) { return '<div class="scpart scp' + (n === 1 ? '' : ' hide') + '" id="scp_' + n + '">' + h + '</div>'; };
+  var p1 = card('👤 ข้อมูลผู้ป่วย', '<label class="t" for="sc_p">ผู้ป่วย *</label><select id="sc_p">' + ops + '</select><p class="sub" id="sc_pi" style="margin-top:6px"></p>' +
+      '<div class="g2">' + fld('sc_d', 'วันที่คัดกรอง *', s.date || today(), 'date') + fld('sc_t', 'เวลา', s.time || nowT(), 'time') + '</div>') +
+    card('⚖️ การวัดร่างกาย', '<div class="g2">' + fld('sc_w', 'น้ำหนัก (กก.)', s.weight, 'number', nm) + fld('sc_h', 'ส่วนสูง (ซม.)', s.height, 'number', nm) + '</div>' +
+      '<div class="g2">' + fld('sc_o', 'รอบเอว (ซม.)', s.waist, 'number', nm) + fld('sc_b', 'BMI (คำนวณให้อัตโนมัติ)', s.bmi, 'text', 'readonly') + '</div>');
+    var p4 = card('🩸 ระดับน้ำตาลในเลือด <span id="sc_gb"></span>', '<label class="t" for="sc_gt">ประเภทการตรวจ</label><select id="sc_gt"><option value="FBS"' + (s.sugarType !== 'RBS' ? ' selected' : '') + '>งดอาหารอย่างน้อย 8 ชั่วโมง (FPG)</option><option value="RBS"' + (s.sugarType === 'RBS' ? ' selected' : '') + '>ไม่ได้งดอาหาร (สุ่มตรวจ)</option></select>' +
+      fld('sc_g', 'ค่าน้ำตาลในเลือด (mg/dL)', s.sugar, 'number', 'min="0" inputmode="decimal"') +
+      '<p class="sub" style="margin-top:8px">งดอาหาร: ปกติ &lt; 100 · เสี่ยง 100–125 · สูง ≥ 126<br>ไม่งดอาหาร: ปกติ &lt; 140 · เฝ้าระวัง 140–199 · สูง ≥ 200</p>') +
+    card('❤️ ความดันโลหิต <span id="sc_bb"></span>', '<div class="g2">' + fld('sc_s1', 'ครั้งที่ 1 ตัวบน (SYS)', s.sbp1, 'number', num) + fld('sc_d1', 'ครั้งที่ 1 ตัวล่าง (DIA)', s.dbp1, 'number', num) +
+      fld('sc_s2', 'ครั้งที่ 2 ตัวบน (ถ้ามี)', s.sbp2, 'number', num) + fld('sc_d2', 'ครั้งที่ 2 ตัวล่าง (ถ้ามี)', s.dbp2, 'number', num) + '</div>' + fld('sc_hr', 'ชีพจร (ครั้ง/นาที)', s.pulse, 'number', num) +
+      '<p class="sub" style="margin-top:8px">ปกติ &lt; 120/80 · เฝ้าระวัง 120–139 / 80–89 · สูง ≥ 140/90 (ใช้ค่าเฉลี่ยของครั้งที่วัด)</p>');
+  var p5 = card('📊 สรุปผลการคัดกรอง', '<div id="sc_sum"></div><p class="sub" style="margin-top:8px;text-align:center">ผลคัดกรองเบื้องต้น ไม่ใช่การวินิจฉัย ผู้ที่ค่าผิดปกติควรได้รับการยืนยันโดยแพทย์</p>') +
+    card('📝 บันทึก/คำแนะนำที่ให้', '<textarea id="sc_n" style="min-height:110px">' + esc(s.note) + '</textarea>');
+  return '<div class="hd np"><div><h2>' + (s.id ? 'แก้ไขผลคัดกรอง' : 'คัดกรองความเสี่ยงเบาหวานและความดัน') + '</h2><span class="sub">กรอกทีละขั้นตอน ผลสรุปอัปเดตให้ทันที</span></div>' +
+    '<div class="ph2">' + (s.id ? '<button class="sec sm" data-a="scP" data-v="' + s.id + '">🖨️ พิมพ์</button><button class="dg sm" data-a="scD" data-v="' + s.id + '">🗑️ ลบ</button>' : '') + '<button class="sec sm" data-a="scQ">✖ ปิด</button></div></div>' +
+    '<div id="scf" class="scw"><div class="scm"><div class="stp np">' + stp + '</div>' +
+    part(1, p1) + part(2, cpBtn() + scP2(iv)) + part(3, scP3(iv)) + part(4, p4) + part(5, p5) +
+    '<div class="scbar np"><button class="sec" id="sc_bk" data-a="scB">← ย้อนกลับ</button><span class="sub" id="sc_pg"></span><button id="sc_nx" data-a="scNx">ถัดไป →</button>' +
+    '<span id="sc_end" class="ph2 hide" style="margin:0"><button class="sec" data-a="scSP">💾🖨️ บันทึกและพิมพ์</button><button id="sv" data-a="scS">💾 บันทึก</button></span></div></div>' +
+    '<aside class="scside cd np"><div id="sc_side"></div></aside></div>';
+}
+function scShow(n) {
+  scStep = n;
+  document.querySelectorAll('#scf .scpart').forEach(function (e) { e.classList.toggle('hide', e.id !== 'scp_' + n); });
+  document.querySelectorAll('#scf .sp').forEach(function (e, i) { e.classList.toggle('on', i + 1 === n); e.classList.toggle('ok', i + 1 < n); e.firstChild.textContent = i + 1 < n ? '✓' : String(i + 1); });
+  $('sc_bk').style.visibility = n === 1 ? 'hidden' : 'visible';
+  $('sc_nx').classList.toggle('hide', n === SCN); $('sc_end').classList.toggle('hide', n !== SCN);
+  $('sc_pg').textContent = 'ขั้นตอน ' + n + '/' + SCN + ' · ' + STEPS[n - 1][1];
+  window.scrollTo(0, 0);
+}
+function scGo(n) {
+  n = +n;
+  if (n > 1 && (!$('sc_p').value || !$('sc_d').value)) { toast('กรุณาเลือกผู้ป่วยและวันที่ก่อน', 1); scShow(1); return; }
+  scShow(Math.max(1, Math.min(SCN, n)));
+}
+
+/* ---------- อ่านค่า / อัปเดตสรุป / บันทึก ---------- */
 function scObj() {
   var g = function (id) { var e = $(id); return e ? e.value : ''; };
   var all = function (n) { return Array.prototype.map.call(document.querySelectorAll('#scf input[name=' + n + ']:checked'), function (e) { return e.value; }); };
@@ -143,25 +171,31 @@ function scObj() {
 function scUp() {
   if (!$('sc_sum')) return;
   var o = scObj(), p = find(o.patientId), ev = scEval(o, p && p.gender);
-  $('sc_b').value = ev.bmi === null ? '' : ev.bmi.toFixed(1); $('sc_sum').innerHTML = scSum(ev);
+  $('sc_b').value = ev.bmi === null ? '' : ev.bmi.toFixed(1);
+  $('sc_pi').textContent = p ? (p.age ? p.age + ' ปี · ' : '') + (p.gender || '') + (p.diseases ? ' · โรคประจำตัว: ' + p.diseases.split(',').join(', ') : '') : '';
+  $('sc_gb').innerHTML = ev.suLv ? rb(ev.suLv[0], ev.suLv[1]) : ''; $('sc_bb').innerHTML = ev.bpLv ? rb(ev.bpLv[0], ev.bpLv[1]) : '';
+  var sm = scSum(ev); $('sc_sum').innerHTML = sm;
+  $('sc_side').innerHTML = '<h3>สรุปผลทันที</h3>' + (p ? '<p class="sub" style="margin-bottom:8px">' + esc(p.name) + '</p>' : '') + sm;
 }
-async function scSave() {
+async function scSave(andPrint) {
   var o = scObj();
-  if (!o.patientId || !o.date) { toast('กรุณาเลือกผู้ป่วยและวันที่', 1); return; }
+  if (!o.patientId || !o.date) { toast('กรุณาเลือกผู้ป่วยและวันที่', 1); scShow(1); return; }
   var p = find(o.patientId), ev = scEval(o, p && p.gender);
   o.bmi = ev.bmi === null ? '' : ev.bmi; o.risk = ev.overall === 'none' ? '' : ev.overall; o.interview = JSON.stringify(o.interview);
   o = Object.assign({}, scEdit || {}, o);
   $('sv').disabled = true;
-  try { await call('saveScreen', o); await load(); closeModal(); render(); toast('บันทึกผลคัดกรองแล้ว'); }
-  catch (e) { toast(e.message, 1); $('sv').disabled = false; }
+  try {
+    var r = await call('saveScreen', o); await load(); toast('บันทึกผลคัดกรองแล้ว');
+    if (andPrint) scPrint(r.id); else go('scr');
+  } catch (e) { toast(e.message, 1); $('sv').disabled = false; }
 }
 function scCp() {
-  var pid = $('sc_p').value; if (!pid) { toast('กรุณาเลือกผู้ป่วยก่อน', 1); return; }
-  var prev = S.screens.filter(function (x) { return x.patientId === pid && (!scEdit || x.id !== scEdit.id); })
-    .sort(function (a, b) { return b.date.localeCompare(a.date) || (b.time || '').localeCompare(a.time || ''); })[0];
+  var pid = $('sc_p').value; if (!pid) { toast('กรุณาเลือกผู้ป่วยก่อน (ขั้นตอนที่ 1)', 1); return; }
+  var prev = scSorted(S.screens.filter(function (x) { return x.patientId === pid && (!scEdit || x.id !== scEdit.id); }))[0];
   if (!prev) { toast('ผู้ป่วยรายนี้ยังไม่เคยคัดกรอง', 1); return; }
-  $('sc_int').innerHTML = scInt(parseIv(prev.interview)); A.scT(scTab); scUp(); toast('ลอกผลสัมภาษณ์จากวันที่ ' + fmtD(prev.date) + ' แล้ว');
+  var iv = parseIv(prev.interview); $('scp_2').innerHTML = cpBtn() + scP2(iv); $('scp_3').innerHTML = scP3(iv); scUp(); toast('ลอกผลสัมภาษณ์จากวันที่ ' + fmtD(prev.date) + ' แล้ว');
 }
+function cpBtn() { return '<div class="ph2 np" style="justify-content:flex-end;margin-bottom:10px"><button type="button" class="sec sm" data-a="scCp">📋 ลอกผลสัมภาษณ์จากครั้งก่อน</button></div>'; }
 
 /* ---------- รายการ / หน้าภาพรวม ---------- */
 function rowS(s, name) {
@@ -176,7 +210,7 @@ function vScr() {
   scSorted(S.screens).forEach(function (s) { if (!last[s.patientId]) last[s.patientId] = s; });
   var ks = Object.keys(last); ks.forEach(function (k) { if (cnt[last[k].risk] !== undefined) cnt[last[k].risk]++; });
   var C = [['🩺', 'ผู้ป่วยที่คัดกรองแล้ว', ks.length], ['🔴', 'เสี่ยงสูง (ล่าสุด)', cnt.red], ['🟡', 'เฝ้าระวัง (ล่าสุด)', cnt.yellow], ['🟢', 'ปกติ (ล่าสุด)', cnt.green]];
-  return '<div class="hd"><div><h2>คัดกรองเบาหวาน/ความดัน (' + S.screens.length + ')</h2><span class="sub">สัมภาษณ์ปัจจัยเสี่ยง วัดน้ำตาล ความดัน และ BMI</span></div><button data-a="scN">+ คัดกรอง</button></div>' +
+  return '<div class="hd"><div><h2>คัดกรองเบาหวาน/ความดัน (' + S.screens.length + ')</h2><span class="sub">สัมภาษณ์ปัจจัยเสี่ยง วัดน้ำตาล ความดัน และ BMI</span></div><div class="ph2"><button class="sec" data-a="scPB">🖨️ แบบฟอร์มเปล่า</button><button data-a="scN">+ คัดกรอง</button></div></div>' +
     '<div class="gs">' + C.map(function (c) { return '<div class="cd st"><i>' + c[0] + '</i><b data-n="' + c[2] + '">0</b><span>' + c[1] + '</span></div>'; }).join('') + '</div>' +
     '<div class="cd lst">' + (scSorted(S.screens).map(function (s) { return rowS(s, true); }).join('') || '<div class="empty"><i>🩺</i>ยังไม่มีการคัดกรอง กด "+ คัดกรอง" เพื่อเริ่มต้น</div>') + '</div>';
 }
@@ -185,53 +219,73 @@ function scMini(id) {
   return '<label class="t">ประวัติการคัดกรองเบาหวาน/ความดัน (' + a.length + ')</label>' + (a.slice(0, 5).map(function (s) { return rowS(s, false); }).join('') || '<div class="empty">ยังไม่เคยคัดกรอง</div>');
 }
 
-/* ---------- พิมพ์ ---------- */
-function scIvRows(iv) {
-  var fam = function (a, o) { var t = (a || []).map(function (k) { return labOf(FAM, k); }); if (o) t.push(o); return t.join(', ') || '-'; };
-  var ys = function (l, m) { return l.filter(function (x) { return m[x[0]] === 'Y'; }).map(function (x) { return x[1]; }).join(', ') || '-'; };
+/* ---------- เอกสารพิมพ์ (แบบฟอร์มเต็ม ติ๊ก ☑/☐ เก็บเป็นหลักฐานได้) ---------- */
+function ck(on, l) { return '<span class="ck">' + (on ? '☑' : '☐') + ' ' + l + '</span>'; }
+function scSheet(p, s) {
+  p = p || {}; s = s || {};
+  var iv = parseIv(s.interview), ev = scEval(Object.assign({}, s, { interview: iv }), p.gender), bl = !s.id, DOT = '..........';
+  var v = function (x, u) { return x ? esc(x) + (u ? ' ' + u : '') : DOT; };
+  var tr = function (a, b) { return '<tr><td>' + a + '</td><td>' + b + '</td></tr>'; };
+  var lv = function (a) { return a ? ' — ' + rb(a[0], a[1]) : ''; };
+  var fam = function (a, o) { return FAM.map(function (x) { return ck(a.indexOf(x[0]) >= 0, x[1]); }).join('') + ck(!!o, 'อื่นๆ ' + (o ? esc(o) : DOT)); };
   var sm = iv.sm, al = iv.al;
-  var smT = sm.st === 'yes' ? 'สูบ ' + (sm.cig || '-') + ' มวน/วัน · ' + (sm.pk || '-') + ' pack/ปี · ' + (sm.yr || '-') + ' ปี' + (sm.ty ? ' · ' + sm.ty : '') : (sm.st === 'no' ? 'ไม่สูบ' : '-');
-  if (sm.qt === 'Y') smT += ' · เคยสูบแต่เลิกแล้ว' + (sm.qyr ? ' (' + sm.qyr + ' ปี)' : '') + (sm.qty ? ' ' + sm.qty : '');
-  var alT = labOf(ALQ, al.st); if (alT === al.st) alT = '-';
-  if (al.st === 'oc' || al.st === 'rg' || al.st === 'qt') alT += (al.fq ? ' · ' + al.fq + ' ครั้ง/สัปดาห์' : '') + (al.ty ? ' · ' + al.ty : '') + (al.yr ? ' · ' + al.yr + ' ปี' : '');
-  return [['บิดา/มารดามีประวัติ', fam(iv.fm, iv.fmo)], ['พี่น้องสายตรงมีประวัติ', fam(iv.sb, iv.sbo)], ['ประวัติเจ็บป่วย (มี)', ys(HX3, iv.hx)],
-    ['ไม่เคยตรวจ', HX3.filter(function (x) { return iv.hx[x[0]] === 'U'; }).map(function (x) { return x[1]; }).join(', ') || '-'], ['อาการที่พบ', ys(HX2, iv.sy)],
-    ['การปฏิบัติตน', labOf(TXQ, iv.tx) === iv.tx ? '-' : labOf(TXQ, iv.tx)], ['การสูบบุหรี่', smT], ['การดื่มแอลกอฮอล์', alT], ['การออกกำลังกาย', EXQ[iv.ex - 1] || '-'],
-    ['รสอาหารที่ชอบ', (iv.fd || []).map(function (k) { return labOf(FDQ, k); }).join(', ') || '-']];
-}
-function scPrint(id) {
-  var s = S.screens.filter(function (x) { return x.id === id; })[0]; if (!s) return;
-  var p = find(s.patientId); if (!p) return;
-  var n = scNorm(s), ev = scEval(n, p.gender), tr = function (a, b) { return '<tr><td>' + a + '</td><td>' + b + '</td></tr>'; };
-  var ov = { green: 'ความเสี่ยงต่ำ', yellow: 'เฝ้าระวัง', red: 'เสี่ยงสูง ควรส่งพบแพทย์', none: '-' }[ev.overall];
+  var ov = { green: 'ความเสี่ยงต่ำ', yellow: 'เฝ้าระวัง', red: 'เสี่ยงสูง ควรส่งพบแพทย์', none: '' }[ev.overall];
   var h = '<div class="sh"><b>โรงพยาบาลส่งเสริมสุขภาพตำบลบ้านบัวหลวง</b><br>ตำบลเหล่า อำเภอทุ่งเขาหลวง จังหวัดร้อยเอ็ด<h2>แบบคัดกรองความเสี่ยงโรคเบาหวานและความดันโลหิตสูง</h2></div>' +
-    '<h4>ข้อมูลผู้ป่วย</h4><table>' + tr('ชื่อ-นามสกุล', esc(p.name)) + tr('อายุ / เพศ', esc(p.age || '-') + ' ปี / ' + esc(p.gender || '-')) + tr('ที่อยู่', esc(p.address || '-').replace(/\n/g, '<br>')) + '</table>' +
-    '<h4>ผลการวัด วันที่ ' + fmtD(s.date) + (s.time ? ' เวลา ' + esc(s.time) + ' น.' : '') + '</h4><table>' +
-    tr('น้ำหนัก / ส่วนสูง', esc(s.weight || '-') + ' กก. / ' + esc(s.height || '-') + ' ซม.') + tr('BMI', ev.bmi !== null ? ev.bmi.toFixed(1) + ' — ' + rb(ev.bmiLv[0], ev.bmiLv[1]) : '-') +
-    tr('รอบเอว', esc(s.waist || '-') + ' ซม.' + (ev.waLv ? ' — ' + rb(ev.waLv[0], ev.waLv[1]) : '')) +
-    tr('น้ำตาลในเลือด', ev.suLv ? ev.su + ' mg/dL (' + (s.sugarType === 'RBS' ? 'ไม่งดอาหาร' : 'งดอาหาร') + ') — ' + rb(ev.suLv[0], ev.suLv[1]) : '-') +
-    tr('ความดันโลหิต', ev.bpLv ? ev.sys + '/' + ev.dia + ' mmHg — ' + rb(ev.bpLv[0], ev.bpLv[1]) : '-') + tr('ชีพจร', esc(s.pulse || '-') + ' ครั้ง/นาที') +
-    tr('สรุปผลคัดกรอง', rb(ev.overall, ov)) + tr('ปัจจัยเสี่ยง', esc(ev.f.join(', ') || '-')) + '</table>' +
-    '<h4>ผลการสัมภาษณ์</h4><table>' + scIvRows(n.interview).map(function (r) { return tr(r[0], esc(r[1])); }).join('') + '</table>' +
-    '<h4>บันทึก/คำแนะนำ</h4><div>' + esc(s.note || '-').replace(/\n/g, '<br>') + '</div>' +
-    '<div class="sg"><div>ลงชื่อ ........................................<br>ผู้คัดกรอง (' + esc(s.screener || '........................') + ')</div><div>ลงชื่อ ........................................<br>ผู้ตรวจสอบ<br>(........................................)</div></div>' +
-    '<p style="text-align:right;font-size:13px;margin-top:14px">พิมพ์เมื่อ ' + fmtD(today()) + ' · ผลคัดกรองเบื้องต้น ไม่ใช่การวินิจฉัย</p>';
-  P.pid = p.id; P.sel = null; closeModal(); go('prt');
+    '<table class="t4"><tr><td>ชื่อ-นามสกุล</td><td>' + (p.name ? esc(p.name) : DOT + DOT) + '</td><td>อายุ / เพศ</td><td>' + (p.name ? esc(p.age || '-') + ' ปี / ' + esc(p.gender || '-') : DOT) + '</td></tr>' +
+    '<tr><td>วันที่คัดกรอง</td><td>' + (s.date ? fmtD(s.date) + (s.time ? ' เวลา ' + esc(s.time) + ' น.' : '') : DOT) + '</td><td>ผู้คัดกรอง</td><td>' + (s.screener ? esc(s.screener) : DOT) + '</td></tr>' +
+    '<tr><td>ที่อยู่</td><td colspan="3">' + (p.address ? esc(p.address).replace(/\n/g, '<br>') : DOT + DOT + DOT) + '</td></tr></table>' +
+    '<h4>ส่วนที่ 1 การวัดร่างกาย</h4><table class="t4"><tr><td>น้ำหนัก</td><td>' + v(s.weight, 'กก.') + '</td><td>ส่วนสูง</td><td>' + v(s.height, 'ซม.') + '</td></tr>' +
+    '<tr><td>รอบเอว</td><td>' + v(s.waist, 'ซม.') + lv(ev.waLv) + '</td><td>BMI</td><td>' + (ev.bmi !== null ? ev.bmi.toFixed(1) + lv(ev.bmiLv) : DOT) + '</td></tr></table>' +
+    '<h4>ส่วนที่ 2 ประวัติครอบครัวและการเจ็บป่วย</h4><table>' + tr('บิดา/มารดามีประวัติ', fam(iv.fm, iv.fmo)) + tr('พี่น้องสายตรงมีประวัติ', fam(iv.sb, iv.sbo)) + '</table>' +
+    '<table>' + HX3.map(function (x) { var q = iv.hx[x[0]]; return tr(x[1], ck(q === 'Y', 'มี') + ck(q === 'N', 'ไม่มี') + ck(q === 'U', 'ไม่เคยตรวจ')); }).join('') +
+    HX2.map(function (x) { var q = iv.sy[x[0]]; return tr(x[1], ck(q === 'Y', 'มี') + ck(q === 'N', 'ไม่มี')); }).join('') +
+    tr('วิธีปฏิบัติตนหากมีประวัติ', TXQ.map(function (x) { return ck(iv.tx === x[0], x[1]); }).join('<br>')) + '</table>' +
+    '<h4>ส่วนที่ 3 พฤติกรรมสุขภาพ</h4><table>' +
+    tr('การสูบบุหรี่', ck(sm.st === 'no', 'ไม่สูบ') + ck(sm.st === 'yes', 'สูบ ' + v(sm.cig, 'มวน/วัน') + ' ' + v(sm.pk, 'pack/ปี') + ' ' + v(sm.yr, 'ปี')) + (sm.ty ? ' ชนิด ' + esc(sm.ty) : '') + '<br>' + ck(sm.qt === 'Y', 'เคยสูบแต่เลิกแล้ว ' + v(sm.qyr, 'ปี') + (sm.qty ? ' ชนิด ' + esc(sm.qty) : ''))) +
+    tr('การดื่มแอลกอฮอล์', ALQ.map(function (x) { return ck(al.st === x[0], x[1]); }).join('') + '<br>ความถี่ ' + v(al.fq, 'ครั้ง/สัปดาห์') + ' · ชนิด ' + v(al.ty) + ' · ระยะเวลา ' + v(al.yr, 'ปี')) +
+    tr('การออกกำลังกาย', EXQ.map(function (t, i) { return ck(iv.ex === String(i + 1), t); }).join('<br>')) +
+    tr('รสอาหารที่ชอบ', FDQ.map(function (x) { return ck(iv.fd.indexOf(x[0]) >= 0, x[1]); }).join('')) + '</table>' +
+    '<h4>ส่วนที่ 4 ผลการตรวจ</h4><table>' +
+    tr('น้ำตาลในเลือด', ck(s.sugarType !== 'RBS' && !bl, 'งดอาหาร (FPG)') + ck(s.sugarType === 'RBS', 'ไม่งดอาหาร') + ' ค่า ' + v(s.sugar, 'mg/dL') + lv(ev.suLv)) +
+    tr('ความดันโลหิต', 'ครั้งที่ 1: ' + v(s.sbp1) + ' / ' + v(s.dbp1) + ' · ครั้งที่ 2: ' + v(s.sbp2) + ' / ' + v(s.dbp2) + ' mmHg' + (ev.bpLv ? '<br>ค่าเฉลี่ย ' + ev.sys + '/' + ev.dia + lv(ev.bpLv) : '')) +
+    tr('ชีพจร', v(s.pulse, 'ครั้ง/นาที')) + '</table>' +
+    '<h4>ส่วนที่ 5 สรุปผลและคำแนะนำ</h4><table>' + tr('สรุปผลคัดกรอง', ov ? rb(ev.overall, ov) : ck(false, 'ความเสี่ยงต่ำ') + ck(false, 'เฝ้าระวัง') + ck(false, 'เสี่ยงสูง ส่งพบแพทย์')) +
+    tr('ปัจจัยเสี่ยง', esc(ev.f.join(', ')) || (bl ? DOT + DOT + DOT : '-')) + tr('บันทึก/คำแนะนำ', s.note ? esc(s.note).replace(/\n/g, '<br>') : (bl ? DOT + DOT + DOT + '<br><br>' : '-')) + '</table>' +
+    '<div class="sg"><div>ลงชื่อ ........................................<br>ผู้คัดกรอง<br>(........................................)</div><div>ลงชื่อ ........................................<br>ผู้ตรวจสอบ<br>(........................................)</div></div>' +
+    '<p style="text-align:right;font-size:12px;margin-top:10px">พิมพ์เมื่อ ' + fmtD(today()) + ' · ผลคัดกรองเบื้องต้น ไม่ใช่การวินิจฉัย</p>';
+  return h;
+}
+function scShowSheet(h) {
+  go('prt');
   $('sheetw').innerHTML = '<div class="np ph2" style="justify-content:space-between;align-items:center;margin:14px 0"><span class="sub">✏️ คลิกที่เอกสารเพื่อแก้ไขข้อความได้ก่อนพิมพ์</span><button data-a="prn">🖨️ พิมพ์ / บันทึกเป็น PDF</button></div>' +
     '<div id="sheet" contenteditable="true" spellcheck="false">' + h + '</div>';
   $('sheetw').scrollIntoView({ behavior: 'smooth' });
 }
+function scPrint(id) {
+  var s = S.screens.filter(function (x) { return x.id === id; })[0]; if (!s) return;
+  var p = find(s.patientId); if (!p) return;
+  P.pid = p.id; P.sel = null; closeModal(); scShowSheet(scSheet(p, s));
+}
 
 /* ---------- เชื่อมเข้ากับแอป ---------- */
 Object.assign(A, {
-  scN: function (id) { scForm(id || '', ''); }, scE: function (id) { scForm('', id); }, scS: scSave, scCp: scCp, scP: scPrint,
-  scD: function (id) { ask('ลบผลคัดกรองนี้?', function () { del('deleteScreen', id, 'ลบผลคัดกรองแล้ว'); }); },
-  scT: function (id) {
-    scTab = id;
-    document.querySelectorAll('#scf .scs').forEach(function (e) { e.classList.toggle('hide', e.id !== 'scs_' + id); });
-    document.querySelectorAll('#scf .pl').forEach(function (e) { e.classList.toggle('on', e.dataset.v === id); });
+  scN: function (id) { scForm(id || '', ''); }, scE: function (id) { scForm('', id); },
+  scS: function () { scSave(false); }, scSP: function () { scSave(true); }, scCp: scCp, scP: scPrint,
+  scPB: function () { scShowSheet(scSheet(null, null)); },
+  scG: scGo, scNx: function () { scGo(scStep + 1); }, scB: function () { scGo(scStep - 1); },
+  scQ: function () { go('scr'); },
+  scD: function (id) {
+    ask('ลบผลคัดกรองนี้?', async function () {
+      try { await call('deleteScreen', { id: id }); await load(); closeModal(); go('scr'); toast('ลบผลคัดกรองแล้ว'); } catch (e) { toast(e.message, 1); closeModal(); }
+    });
   },
-  scRst: function () { document.querySelectorAll('#scs_hx input:checked').forEach(function (e) { e.checked = false; }); scUp(); }
+  scRst: function () { document.querySelectorAll('#scp_2 input[type=radio]:checked').forEach(function (e) { e.checked = false; }); scUp(); },
+  scAllN: function () {
+    HX3.map(function (x) { return 'hx_' + x[0]; }).concat(HX2.map(function (x) { return 'sy_' + x[0]; })).forEach(function (n) {
+      if (!document.querySelector('#scf input[name=' + n + ']:checked')) document.querySelector('#scf input[name=' + n + '][value=N]').checked = true;
+    });
+    scUp(); toast('ตอบ "ไม่มี" ในข้อที่ยังว่างแล้ว');
+  }
 });
 function scEvt(e) {
   var t = e.target; if (!t.closest || !t.closest('#scf')) return;

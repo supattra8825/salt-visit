@@ -118,8 +118,24 @@ main{flex:1;margin-left:224px;padding:26px;min-width:0;width:100%}
  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
  @page{size:A4;margin:14mm}
 }
-/* คัดกรองเบาหวาน/ความดัน */
-.pl{display:inline-block;padding:6px 13px;border-radius:99px;border:1px solid var(--ln);margin:3px 6px 3px 0;cursor:pointer;color:var(--tx);font-weight:600;font-size:14px;background:var(--in)}
-.pl.on{background:var(--p2);color:#fff;border-color:var(--p2)}
-.scs .ch span{margin:3px 6px 3px 0}
-@media(max-width:820px){#fs{display:none!important}}
+/* หน้าคัดกรอง (เต็มหน้าจอ แบ่งเป็นขั้นตอน) */
+.scw{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+.scside{position:sticky;top:16px}
+.stp{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px}
+.sp{flex:1;min-width:150px;display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;border:1px solid var(--ln);background:var(--in);color:var(--tx);font-size:15px}
+.sp b{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--ln);font-size:15px}
+.sp.on{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-color:transparent}.sp.on b{background:rgba(255,255,255,.3)}
+.sp.ok b{background:var(--g);color:#fff}
+.scc{margin-bottom:14px}
+.sct{font-size:19px;font-weight:700;margin-bottom:10px;padding-left:10px;border-left:5px solid var(--p2)}
+.qa{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;padding:10px 4px;border-bottom:1px solid var(--ln)}.qa:last-child{border:0}
+.qa .qt{flex:1;min-width:220px}
+.scp .ch span{padding:9px 16px;font-size:16px;margin:4px 8px 4px 0}
+.scp .qa .ch span{margin:2px 0 2px 8px}
+.scbar{position:sticky;bottom:0;z-index:5;display:flex;gap:10px;justify-content:space-between;align-items:center;padding:12px;margin-top:6px;border-radius:18px;background:var(--cd);backdrop-filter:blur(14px);border:1px solid var(--bd);box-shadow:var(--sh)}
+.scbar button{min-width:130px}
+@media(max-width:1100px){.scw{grid-template-columns:1fr}.scside{display:none}}
+@media(max-width:820px){#fs{display:none!important}.scbar{bottom:calc(66px + env(safe-area-inset-bottom,0px))}.sp span{display:none}.sp{min-width:0;justify-content:center;padding:8px}.sp.on{flex:3}.sp.on span{display:inline}.scbar button{min-width:0;flex:1}.scbar .sub{display:none}}
+#sheet .t4 td:nth-child(odd){width:18%;background:#eef3f8;font-weight:600}
+#sheet .ck{display:inline-block;margin-right:14px;white-space:nowrap}
+@media print{#sheet{font-size:12.5px;line-height:1.45}#sheet h4{break-after:avoid}#sheet table{break-inside:avoid}#sheet td{padding:3px 6px}}

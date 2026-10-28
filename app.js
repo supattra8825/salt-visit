@@ -84,7 +84,7 @@ function go(tab) {
 }
 function render() {
   var v = $('view');
-  v.innerHTML = '<div class="fade">' + ({ dash: vDash, pts: vPts, vis: vVis, scr: function () { return vScr(); }, prt: vPrt, set: vSet }[S.tab])() + '</div>';
+  v.innerHTML = '<div class="fade">' + ({ dash: vDash, pts: vPts, vis: vVis, scr: function () { return vScr(); }, scf: function () { return vScf(); }, prt: vPrt, set: vSet }[S.tab])() + '</div>';
   setTimeout(function () {
     document.querySelectorAll('.seg').forEach(function (e) { e.style.strokeDasharray = e.dataset.d; });
     document.querySelectorAll('[data-h]').forEach(function (e) { e.style.height = e.dataset.h + '%'; });

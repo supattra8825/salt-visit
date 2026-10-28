@@ -1,5 +1,5 @@
 /* Service worker: เก็บไฟล์หน้าเว็บไว้ให้เปิดเร็วและติดตั้งเป็นแอปได้ (ข้อมูลผู้ป่วยไม่ถูกเก็บไว้ที่นี่) */
-var CACHE = 'salt-v2';
+var CACHE = 'salt-v3';
 var SHELL = ['./', 'index.html', 'style.css', 'app.js', 'screen.js', 'config.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
